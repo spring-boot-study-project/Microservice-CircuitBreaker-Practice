@@ -1,0 +1,76 @@
+spring:
+  application.name: circuit-breaker-practice
+
+server:
+  port: 8090
+
+resilience4j.retry:
+  configs:
+    default:
+      maxAttempts: 3  # 재시도를 최대 3번을 하는데 원본 1번 호출후 2번 호출 진행
+      waitDuration: 1000ms # 재시도 간격을 1000ms로 한다는 의미
+      retryExceptions:
+        - com.springboot.circuitbreaker.exception.RetryException
+      ignoreExceptions:
+        - com.springboot.circuitbreaker.exception.IgnoreException
+  instances:
+    db-retry:
+      baseConfig: default # 기본 설정을 사용
+    redis-retry:
+      baseConfig: default # redis의 요청이 있다면 더 적게..
+      maxAttempts: 2
+
+resilience4j.circuitbreaker:
+  configs:
+    default: # 공통 설정을 위한 base config
+      slidingWindowType: COUNT_BASED                        # 트레픽이 불규칙적이고 툭툭 튄다면 TIME_BASED로 변경하자. 안정적인 트래픽이다라고 가정하고 이 설정을 사용
+      slidingWindowSize: 10                                 # (minimumNumberOfCalls 이후로는) 10개의 요청을 기준으로 판단한다.
+      minimumNumberOfCalls: 7                               # 최소 7번까지는 무조건 CLOSE로 가정하고 호출한다.
+      waitDurationInOpenState: 7s                           # OPEN 상태에서 HALF_OPEN으로 가려면 얼마나 기다릴 것인가? 이는 7초로 둬도 되지 않을까...
+      
+      failureRateThreshold: 40                              # slidingWindowSize 중 몇 %가 recordException이면 OPEN으로 만들 것인가?
+      
+      slowCallDurationThreshold: 3000                       # 몇 ms 동안 요청이 처리되지 않으면 실패로 간주할 것인가?
+      slowCallRateThreshold: 60                             # slidingWindowSize 중 몇 %가 slowCall이면 OPEN으로 만들 것인가?
+
+      permittedNumberOfCallsInHalfOpenState: 5              # HALF_OPEN 상태에서 5번까지는 CLOSE로 가기위해 호출한다.
+      automaticTransitionFromOpenToHalfOpenEnabled: true    # OPEN 상태에서 자동으로 HALF_OPEN으로 갈 것인가?
+
+      eventConsumerBufferSize: 10                           # actuator를 위한 이벤트 버퍼 사이즈
+      registerHealthIndicator: true                         # actuator를 위한 health indicator 등록
+
+      recordFailurePredicate: com.springboot.circuitbreaker.domain.predicate.HttpFailurePredicate   # 어떠한 예외는 실패로 처리하고 어떠한 예외는 무시할 것인가? -> 하나로 일단 구현은 했지만 필요하다면 나눠서 세부적인 예외 처리를 하면 될듯..? recordExceptions, ignoreExceptions 등등..
+  instances:
+    default:
+      baseConfig: default
+
+resilience4j.timelimiter:
+  configs:
+    default:
+      timeoutDurations: 5s
+      cancelRunningFuture: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-detail: always
+  health:
+    diskspace:
+      enabled: false
+    circuitbreakers:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: true
+        resilience4j:
+          circuitbreaker:
+            calls: true
