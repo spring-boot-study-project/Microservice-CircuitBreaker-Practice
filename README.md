@@ -24,7 +24,7 @@
 - FailurePredicate: 각 대상의 특성에 맞는 실패 조건을 정의하여 서킷 브레이커의 정확도를 높입니다.
 - CircuitStateChangeEventHandler: 서킷 브레이커의 상태 변화를 감지하여 Kafka Consumer를 자동으로 pause/resume 합니다.
 
-3. 핵심 워크플로우: Retry → Circuit Breaker → Fallback
+## 3. 핵심 워크플로우: Retry → Circuit Breaker → Fallback
 모든 보호 로직은 다음 순서로 동작하여 장애에 계층적으로 대응합니다.
 ```
 @Retry(name = ProtectionTarget.Constants.DB_RETRY)
@@ -35,7 +35,7 @@ public Optional<Order> findById(Long orderId) { ... }
 2단계: 서킷 차단 (Circuit Breaker): 재시도가 모두 실패하면, CircuitBreaker가 이를 시스템 실패로 기록합니다. 실패율이 임계치를 초과하면 서킷이 열리고 이후의 모든 요청을 즉시 차단(Fail-Fast)합니다.
 3단계: 폴백 (Fallback): 재시도가 최종 실패했거나 서킷이 열려있을 때, AOP가 DatabaseFallbackHandler를 호출하여 대체 로직을 수행합니다.
 
-4. 실전 시나리오별 구현 내용
+## 4. 실전 시나리오별 구현 내용
 시나리오 1: 읽기 작업의 우아한 실패 처리 (DB → Cache Fallback)
 상황: OrderService가 DB에서 주문 정보를 조회하려 하지만 DB에 장애가 발생했습니다.
 해결: DatabaseFallbackHandler가 동작하여, 대신 Redis Cache에서 주문 정보를 조회하여 반환합니다. 사용자 입장에서는 데이터가 약간 오래되었을 수 있지만, 에러 없이 서비스를 계속 이용할 수 있습니다.
