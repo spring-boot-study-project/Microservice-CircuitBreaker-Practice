@@ -1,6 +1,8 @@
 # Microservice-CircuitBreaker-Practice
 마이크로서비스에서 발생할 수 있는 문제를 서킷 브레이커로 어떻게 해결할 수 있을지에 대한 연습 프로젝트 입니다.
 
+![아키텍처 다이어그램](./image/circuitbreaker-architecture.png)
+
 . 문제 정의: 왜 이 프레임워크가 필요한가?
 마이크로서비스 아키텍처는 수많은 외부 의존성(DB, Cache, API, Message Queue)을가집니다. 하나의 의존성에서 발생한 장애는 연쇄적으로 전파되어 전체 시스템을 마비시킬 수 있습니다.
 이 프로젝트는 다음과 같은 실무적인 질문에 대한 해답을 찾고자 합니다.
