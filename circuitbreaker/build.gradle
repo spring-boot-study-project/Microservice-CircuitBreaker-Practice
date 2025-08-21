@@ -1,0 +1,58 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.5.4'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.springboot'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.cloud:spring-cloud-dependencies:2025.0.0"
+	}
+}
+
+dependencies {
+	// Spring-Cloud-Starter-Circuitbreaker
+	implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j'
+	// Spring-Cloud-Starter-OpenFeign
+	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+	// Spring-AOP
+	implementation 'org.springframework.boot:spring-boot-starter-aop'
+	// Spring Actuator
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	// Spring-Web
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	// Kafka
+    implementation 'org.springframework.kafka:spring-kafka'
+	// Redis
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	// JPA (Database)
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	// H2 Database (for testing)
+	runtimeOnly 'com.h2database:h2'
+	// Postgresql
+	implementation 'org.postgresql:postgresql'
+	// Lombok
+	compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+	// Vavr -> 함수형 프로그래밍을 제공하는 라이브러리라고 함
+	implementation 'io.vavr:vavr:0.10.4'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
