@@ -31,14 +31,14 @@
 @CircuitProtection(ProtectionTarget.DB)
 public Optional<Order> findById(Long orderId) { ... }
 ```
-1단계: 재시도 (Retry): PessimisticLockingFailureException과 같은 일시적인 오류 발생 시, 최대 3회까지 자동으로 재시도를 수행합니다.
-2단계: 서킷 차단 (Circuit Breaker): 재시도가 모두 실패하면, CircuitBreaker가 이를 시스템 실패로 기록합니다. 실패율이 임계치를 초과하면 서킷이 열리고 이후의 모든 요청을 즉시 차단(Fail-Fast)합니다.
-3단계: 폴백 (Fallback): 재시도가 최종 실패했거나 서킷이 열려있을 때, AOP가 DatabaseFallbackHandler를 호출하여 대체 로직을 수행합니다.
+- 1단계: 재시도 (Retry): PessimisticLockingFailureException과 같은 일시적인 오류 발생 시, 최대 3회까지 자동으로 재시도를 수행합니다.
+- 2단계: 서킷 차단 (Circuit Breaker): 재시도가 모두 실패하면, CircuitBreaker가 이를 시스템 실패로 기록합니다. 실패율이 임계치를 초과하면 서킷이 열리고 이후의 모든 요청을 즉시 차단(Fail-Fast)합니다.
+- 3단계: 폴백 (Fallback): 재시도가 최종 실패했거나 서킷이 열려있을 때, AOP가 DatabaseFallbackHandler를 호출하여 대체 로직을 수행합니다.
 
 ## 4. 실전 시나리오별 구현 내용
 시나리오 1: 읽기 작업의 우아한 실패 처리 (DB → Cache Fallback)
-상황: OrderService가 DB에서 주문 정보를 조회하려 하지만 DB에 장애가 발생했습니다.
-해결: DatabaseFallbackHandler가 동작하여, 대신 Redis Cache에서 주문 정보를 조회하여 반환합니다. 사용자 입장에서는 데이터가 약간 오래되었을 수 있지만, 에러 없이 서비스를 계속 이용할 수 있습니다.
+- 상황: OrderService가 DB에서 주문 정보를 조회하려 하지만 DB에 장애가 발생했습니다.
+- 해결: DatabaseFallbackHandler가 동작하여, 대신 Redis Cache에서 주문 정보를 조회하여 반환합니다. 사용자 입장에서는 데이터가 약간 오래되었을 수 있지만, 에러 없이 서비스를 계속 이용할 수 있습니다.
 
 ```
 @Override
@@ -50,8 +50,8 @@ public Object handle(Throwable throwable, Object... args) {
 }
 ```
 시나리오 2: 비동기 시스템의 자동 복구 (Kafka Consumer Pause & Resume)
-상황: OrderEventConsumer가 메시지를 처리하던 중 DB 장애가 발생하여 계속 실패하고 있습니다.
-해결:
+- 상황: OrderEventConsumer가 메시지를 처리하던 중 DB 장애가 발생하여 계속 실패하고 있습니다.
+- 해결:
 circuitExecutor가 DB 호출 실패를 감지합니다. 반복적인 실패로 DB 서킷이 OPEN됩니다.
 onFailure 콜백에서 CallNotPermittedException을 감지하고, kafkaRegistry.getListenerContainer(...).pause()를 호출하여 메시지 소비를 중단시킵니다.
 잠시 후 DB가 복구되고, 서킷이 CLOSED 상태로 돌아옵니다.
